@@ -1,0 +1,10 @@
+image: maven:3.9-eclipse-temurin-21
+
+stages:
+  - test
+
+maven-test:
+  stage: test
+  script:
+    - chmod +x mvnw
+    - ./mvnw clean test
