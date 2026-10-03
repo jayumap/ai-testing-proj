@@ -1,4 +1,5 @@
 import subprocess
+import os
 from pathlib import Path
 
 
@@ -25,8 +26,25 @@ def run_git_command(*args):
 
 
 def get_changed_files():
+    ci_base_sha = os.getenv("AI_TEST_BASE_SHA")
+
+    if ci_base_sha:
+        command = [
+            "git",
+            "diff",
+            "--name-only",
+            f"{ci_base_sha}...HEAD"
+        ]
+    else:
+        command = [
+            "git",
+            "diff",
+            "--name-only",
+            "HEAD"
+        ]
+
     result = subprocess.run(
-        ["git", "diff", "--name-only", "HEAD"],
+        command,
         capture_output=True,
         text=True,
         check=True
@@ -65,8 +83,19 @@ def read_file(path):
 
 
 def get_file_diff(source_file):
+    ci_base_sha = os.getenv("AI_TEST_BASE_SHA")
+
+    if ci_base_sha:
+        return run_git_command(
+            "diff",
+            f"{ci_base_sha}...HEAD",
+            "--",
+            str(source_file),
+        )
+
     return run_git_command(
         "diff",
+        "HEAD",
         "--",
         str(source_file),
     )
