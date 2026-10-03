@@ -44,6 +44,6 @@ public class OrderService {
     }
 
     double discountAmount = (price * discountPercent) / 100;
-    return price - discountAmount;
+    return Math.round((price - discountAmount) * 100.0) / 100.0;
 }
 }
