@@ -25,13 +25,29 @@ def run_git_command(*args):
 
 
 def get_changed_files():
-    output = run_git_command("diff", "--name-only", "HEAD")
+    result = subprocess.run(
+        ["git", "diff", "--name-only", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True
+    )
 
-    return [
-        Path(line.strip())
-        for line in output.splitlines()
-        if line.strip()
-    ]
+    changed_files = []
+
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+
+        path = Path(line.strip())
+        normalized = path.as_posix()
+
+        if (
+            normalized.startswith("src/main/java/")
+            and path.suffix == ".java"
+        ):
+            changed_files.append(path)
+
+    return changed_files
 
 
 def find_test_file(source_file):

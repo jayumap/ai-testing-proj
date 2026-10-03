@@ -43,7 +43,7 @@ public class OrderService {
         throw new IllegalArgumentException("Discount must be between 0 and 100");
     }
 
-    double discountAmount = price * discountPercent / 100;
+    double discountAmount = (price * discountPercent) / 100;
     return price - discountAmount;
 }
 }
