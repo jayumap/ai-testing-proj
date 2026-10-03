@@ -54,4 +54,64 @@ class OrderServiceTest {
     void shouldNotAllowCancellationForShippedOrder() {
         assertFalse(orderService.canCancelOrder("SHIPPED"));
     }
+
+    @Test
+    void shouldCalculateDiscountedTotal() {
+        assertEquals(
+                90.0,
+                orderService.calculateDiscountedTotal(100.0, 10.0),
+                0.0001
+        );
+    }
+
+    @Test
+    void shouldReturnOriginalPriceWhenDiscountIsZero() {
+        assertEquals(
+                100.0,
+                orderService.calculateDiscountedTotal(100.0, 0.0),
+                0.0001
+        );
+    }
+
+    @Test
+    void shouldReturnZeroWhenDiscountIsOneHundredPercent() {
+        assertEquals(
+                0.0,
+                orderService.calculateDiscountedTotal(100.0, 100.0),
+                0.0001
+        );
+    }
+
+    @Test
+    void shouldReturnZeroWhenPriceIsZero() {
+        assertEquals(
+                0.0,
+                orderService.calculateDiscountedTotal(0.0, 50.0),
+                0.0001
+        );
+    }
+
+    @Test
+    void shouldRejectNegativePriceForDiscountedTotal() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> orderService.calculateDiscountedTotal(-10.0, 10.0)
+        );
+    }
+
+    @Test
+    void shouldRejectNegativeDiscountForDiscountedTotal() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> orderService.calculateDiscountedTotal(100.0, -1.0)
+        );
+    }
+
+    @Test
+    void shouldRejectDiscountGreaterThanOneHundredForDiscountedTotal() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> orderService.calculateDiscountedTotal(100.0, 101.0)
+        );
+    }
 }
