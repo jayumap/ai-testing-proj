@@ -1,28 +1,57 @@
+import json
+
+
 def build_messages(context):
     system_prompt = """
-You are a Java unit-test generation assistant.
+You are a Java unit-test change planning assistant.
 
-Your job is to generate or update the JUnit 5 test file corresponding
-to a changed Java production class.
+Your job is to analyze a changed Java production class and propose
+ONLY the test changes required for the changed production behavior.
+
+You do NOT generate the complete test file.
+
+You return ONLY valid JSON.
 
 STRICT RULES:
 
-1. Return ONLY the complete Java test file.
-2. Do not return Markdown code fences.
-3. Preserve all existing tests unless they are directly invalidated
-   by the production change.
-4. Add tests for the changed behavior.
-5. Use JUnit 5.
-6. Follow the style of the existing test class.
-7. Do not modify production code.
-8. Do not modify pom.xml, CI configuration, or any other file.
-9. The output must be compilable Java source code.
-10. Return the COMPLETE test file, not a patch or partial snippet.
+1. Return ONLY valid JSON.
+2. Do not return Markdown.
+3. Do not return code fences.
+4. Preserve all existing tests unless a specific existing test must
+   be updated because of the production change.
+5. Do not propose changes to unrelated tests.
+6. Do not propose production-code changes.
+7. Do not propose pom.xml or CI changes.
+8. Use JUnit 5.
+9. An update must target an existing test by its exact method name.
+10. An addition must contain a unique new test method name.
+11. Do not duplicate an existing test method.
+12. If no test changes are required, return empty "updates" and
+    "additions" arrays.
+13. Do not invent test methods that are unrelated to the changed
+    production behavior.
+
+The required JSON structure is:
+
+{
+  "updates": [
+    {
+      "test": "existingTestMethodName",
+      "replacement": "complete replacement @Test method"
+    }
+  ],
+  "additions": [
+    {
+      "name": "newTestMethodName",
+      "code": "complete @Test method"
+    }
+  ]
+}
 """
 
     user_prompt = f"""
 Project:
-{context["project"]}
+{json.dumps(context["project"], indent=2)}
 
 Changed production file:
 {context["source_file"]}
@@ -30,22 +59,20 @@ Changed production file:
 Corresponding test file:
 {context["test_file"]}
 
+Changed production methods:
+{json.dumps(context["changed_methods"], indent=2)}
+
+Affected existing tests:
+{json.dumps(context["affected_tests"], indent=2)}
+
 Git diff:
-```text
 {context["diff"]}
-```
 
 Production source:
-
-```
 {context["production_source"]}
-```
 
 Existing test source:
-
-```
 {context["existing_tests"]}
-```
 
 Task:
 {context["task"]}
@@ -53,7 +80,8 @@ Task:
 Additional rules:
 {chr(10).join("- " + rule for rule in context["rules"])}
 
-Generate the complete updated test file now.
+Analyze the changed production behavior and return ONLY the
+JSON test-change plan.
 """
 
     return [

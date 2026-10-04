@@ -24,6 +24,7 @@ public class OrderService {
         }
 
         if (!shipped) {
+            // Order is getting processed.
             return "PROCESSING";
         }
 
@@ -45,6 +46,6 @@ public class OrderService {
     }
 
     double discountAmount = (price * discountPercent) / 100;
-    return Math.round((price - discountAmount) * 100.0) / 100.0;
+    return Math.round((price - discountAmount) * 10.0) / 10.0;
 }
 }

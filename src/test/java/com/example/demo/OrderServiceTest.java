@@ -127,7 +127,7 @@ class OrderServiceTest {
     @Test
     void shouldCalculateDiscountedTotalWithDecimalPriceAndDiscount() {
         assertEquals(
-                66.663333,
+                66.7,
                 orderService.calculateDiscountedTotal(99.99, 33.33),
                 0.0001
         );
@@ -190,8 +190,27 @@ class OrderServiceTest {
     @Test
     void shouldCalculateDiscountedTotalWithParenthesizedExpressionForDecimalPrice() {
         assertEquals(
-                74.9925,
+                75.0,
                 orderService.calculateDiscountedTotal(99.99, 25.0),
+                0.0001
+        );
+    }
+
+
+@Test
+    void shouldRoundDiscountedTotalUpToNearestTenth() {
+        assertEquals(
+                66.7,
+                orderService.calculateDiscountedTotal(100.0, 33.34),
+                0.0001
+        );
+    }
+
+@Test
+    void shouldRoundDiscountedTotalDownToNearestTenth() {
+        assertEquals(
+                66.6,
+                orderService.calculateDiscountedTotal(100.0, 33.36),
                 0.0001
         );
     }

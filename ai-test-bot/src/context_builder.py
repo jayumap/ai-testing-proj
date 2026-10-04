@@ -7,6 +7,8 @@ from change_analyzer import (
     find_test_file,
     read_file,
     get_file_diff,
+    find_changed_methods,
+    get_affected_tests,
 )
 
 
@@ -19,12 +21,21 @@ RULES = [
     "Add tests for the changed behavior.",
     "Do not modify production code.",
     "Do not modify pom.xml or CI configuration.",
-    "Return the complete test file.",
+    "Return only the structured test-change plan.",
 ]
 
 
 def build_context(source_file):
     test_file = find_test_file(source_file)
+
+    changed_methods = find_changed_methods(
+        source_file
+    )
+
+    affected_tests = get_affected_tests(
+        source_file,
+        test_file
+    )
 
     return {
         "project": {
@@ -35,6 +46,8 @@ def build_context(source_file):
         "source_file": str(source_file),
         "test_file": str(test_file),
         "diff": get_file_diff(source_file),
+        "changed_methods": changed_methods,
+        "affected_tests": affected_tests,
         "production_source": read_file(source_file),
         "existing_tests": (
             read_file(test_file)
@@ -56,7 +69,10 @@ def get_contexts():
         and file.is_relative_to(SOURCE_ROOT)
     ]
 
-    return [build_context(source_file) for source_file in java_sources]
+    return [
+        build_context(source_file)
+        for source_file in java_sources
+    ]
 
 
 def main():

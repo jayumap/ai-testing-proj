@@ -5,7 +5,7 @@ from change_analyzer import get_changed_files
 from context_builder import get_contexts
 from prompt_builder import build_messages
 from llm_client import generate_test
-from safe_writer import write_test_file
+from safe_writer import apply_change_plan
 from git_safety import get_git_status, validate_generated_changes
 
 
@@ -30,7 +30,7 @@ def run_maven_tests():
     if result.returncode != 0:
         raise RuntimeError(
             "Maven validation failed. "
-            "The generated test was not accepted."
+            "The generated test changes were not accepted."
         )
 
     print()
@@ -81,20 +81,21 @@ def main():
     print("  Prompt built successfully.")
 
     print()
-    print("[5/8] Generating test with LLM...")
-    generated_test = generate_test(messages)
+    print("[5/8] Generating test change plan with LLM...")
+    change_plan = generate_test(messages)
 
     print("  LLM generation successful.")
-    print(f"  Generated characters: {len(generated_test)}")
+    print(f"  Test updates:   {len(change_plan['updates'])}")
+    print(f"  Test additions: {len(change_plan['additions'])}")
 
     print()
-    print("[6/8] Safely writing generated test...")
-    test_path = write_test_file(
+    print("[6/8] Safely applying generated test changes...")
+    test_path = apply_change_plan(
         context["test_file"],
-        generated_test
+        change_plan
     )
 
-    print(f"  Test written to: {test_path}")
+    print(f"  Test changes applied to: {test_path}")
 
     run_maven_tests()
 

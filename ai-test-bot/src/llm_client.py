@@ -18,30 +18,106 @@ def load_config():
         return json.load(file)
 
 
-def clean_generated_test(content):
+def parse_change_plan(content):
     content = content.strip()
 
-    if "```" in content:
+    if not content:
+        raise ValueError("LLM returned an empty response.")
+
+    if content.startswith("```"):
         blocks = content.split("```")
 
-        for block in blocks:
-            block = block.strip()
+        if len(blocks) >= 3:
+            content = blocks[1].strip()
 
-            if block.startswith("java"):
-                block = block[4:].strip()
+            if content.startswith("json"):
+                content = content[4:].strip()
 
-            if (
-                "package " in block
-                and "class " in block
-            ):
-                return block.strip()
+    try:
+        plan = json.loads(content)
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            f"LLM response is not valid JSON: {error}"
+        ) from error
 
-    package_index = content.find("package ")
+    if not isinstance(plan, dict):
+        raise ValueError(
+            "LLM change plan must be a JSON object."
+        )
 
-    if package_index >= 0:
-        content = content[package_index:]
+    if "updates" not in plan:
+        raise ValueError(
+            "LLM change plan is missing 'updates'."
+        )
 
-    return content.strip()
+    if "additions" not in plan:
+        raise ValueError(
+            "LLM change plan is missing 'additions'."
+        )
+
+    if not isinstance(plan["updates"], list):
+        raise ValueError(
+            "'updates' must be a JSON array."
+        )
+
+    if not isinstance(plan["additions"], list):
+        raise ValueError(
+            "'additions' must be a JSON array."
+        )
+
+    for update in plan["updates"]:
+        if not isinstance(update, dict):
+            raise ValueError(
+                "Each update must be a JSON object."
+            )
+
+        if "test" not in update:
+            raise ValueError(
+                "Each update must contain 'test'."
+            )
+
+        if "replacement" not in update:
+            raise ValueError(
+                "Each update must contain 'replacement'."
+            )
+
+        if not isinstance(update["test"], str):
+            raise ValueError(
+                "Update 'test' must be a string."
+            )
+
+        if not isinstance(update["replacement"], str):
+            raise ValueError(
+                "Update 'replacement' must be a string."
+            )
+
+    for addition in plan["additions"]:
+        if not isinstance(addition, dict):
+            raise ValueError(
+                "Each addition must be a JSON object."
+            )
+
+        if "name" not in addition:
+            raise ValueError(
+                "Each addition must contain 'name'."
+            )
+
+        if "code" not in addition:
+            raise ValueError(
+                "Each addition must contain 'code'."
+            )
+
+        if not isinstance(addition["name"], str):
+            raise ValueError(
+                "Addition 'name' must be a string."
+            )
+
+        if not isinstance(addition["code"], str):
+            raise ValueError(
+                "Addition 'code' must be a string."
+            )
+
+    return plan
 
 
 def generate_test(messages):
@@ -55,7 +131,9 @@ def generate_test(messages):
             messages=messages
         )
 
-    raise ValueError(f"Unsupported LLM provider: {provider}")
+    raise ValueError(
+        f"Unsupported LLM provider: {provider}"
+    )
 
 
 def _generate_with_openrouter(llm_config, messages):
@@ -80,7 +158,9 @@ def _generate_with_openrouter(llm_config, messages):
     failures = []
 
     print()
-    print(f"  Configured OpenRouter models: {len(models)}")
+    print(
+        f"  Configured OpenRouter models: {len(models)}"
+    )
 
     for index, model in enumerate(models, start=1):
         print()
@@ -100,7 +180,9 @@ def _generate_with_openrouter(llm_config, messages):
             return result
 
         except RetryableLLMError as error:
-            print(f"  Model temporarily unavailable: {error}")
+            print(
+                f"  Model temporarily unavailable: {error}"
+            )
             print("  Trying next configured model...")
 
             failures.append(
@@ -187,7 +269,7 @@ def _call_openrouter(llm_config, model, messages):
             f"Unexpected LLM response format: {data}"
         ) from error
 
-    return clean_generated_test(content)
+    return parse_change_plan(content)
 
 
 if __name__ == "__main__":
