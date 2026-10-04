@@ -1,28 +1,22 @@
 name: AI Test Generation
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+  push:
+    branches-ignore:
+      - master
 
 permissions:
   contents: read
 
 jobs:
   generate-tests:
-    # Only run the AI workflow for PRs from this repository.
-    # Fork PRs will be handled later with a safer secret architecture.
-    if: github.event.pull_request.head.repo.full_name == github.repository
-
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PR code
+      - name: Checkout pushed code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Set up Java 21
@@ -44,7 +38,7 @@ jobs:
 
       - name: Set AI test base SHA
         run: |
-          echo "AI_TEST_BASE_SHA=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_ENV"
+          echo "AI_TEST_BASE_SHA=${{ github.event.before }}" >> "$GITHUB_ENV"
 
       - name: Run AI test generation
         env:

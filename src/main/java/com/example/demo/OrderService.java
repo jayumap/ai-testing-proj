@@ -19,6 +19,7 @@ public class OrderService {
 
     public String getOrderStatus(boolean paid, boolean shipped) {
         if (!paid) {
+            // Order is waiting for payment.
             return "PENDING_PAYMENT";
         }
 
@@ -44,6 +45,6 @@ public class OrderService {
     }
 
     double discountAmount = (price * discountPercent) / 100;
-    return price - discountAmount;
+    return Math.round((price - discountAmount) * 100.0) / 100.0;
 }
 }
