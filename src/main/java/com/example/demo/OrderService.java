@@ -62,6 +62,6 @@ public class OrderService {
         return "STANDARD";
     }
 
-    return "HEAVY";
+    return "OVERSIZE";
 }
 }
