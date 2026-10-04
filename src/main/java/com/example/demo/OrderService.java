@@ -48,4 +48,20 @@ public class OrderService {
     double discountAmount = (price * discountPercent) / 100;
     return Math.round((price - discountAmount) * 10.0) / 10.0;
 }
+
+    public String getShippingCategory(double weight) {
+    if (weight <= 0) {
+        throw new IllegalArgumentException("Weight must be greater than zero");
+    }
+
+    if (weight <= 1.0) {
+        return "LIGHT";
+    }
+
+    if (weight <= 5.0) {
+        return "STANDARD";
+    }
+
+    return "HEAVY";
+}
 }
