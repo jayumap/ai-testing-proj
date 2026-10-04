@@ -19,6 +19,7 @@ public class OrderService {
 
     public String getOrderStatus(boolean paid, boolean shipped) {
         if (!paid) {
+            // Order is waiting for payment.
             return "PENDING_PAYMENT";
         }
 
