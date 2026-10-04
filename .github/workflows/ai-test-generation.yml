@@ -38,7 +38,11 @@ jobs:
 
       - name: Set AI test base SHA
         run: |
-          echo "AI_TEST_BASE_SHA=${{ github.event.before }}" >> "$GITHUB_ENV"
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "AI_TEST_BASE_SHA=$(git rev-list --max-parents=0 HEAD)" >> "$GITHUB_ENV"
+          else
+            echo "AI_TEST_BASE_SHA=${{ github.event.before }}" >> "$GITHUB_ENV"
+          fi
 
       - name: Run AI test generation
         env:
